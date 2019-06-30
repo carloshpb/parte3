@@ -1,29 +1,29 @@
 package server_client.server;
 
-import io.atomix.catalyst.transport.Address;
-import io.atomix.catalyst.transport.netty.NettyTransport;
-import io.atomix.copycat.server.Commit;
-import io.atomix.copycat.server.CopycatServer;
-import io.atomix.copycat.server.StateMachine;
-import io.atomix.copycat.server.storage.Storage;
-import io.atomix.copycat.server.storage.StorageLevel;
+import io.atomix.cluster.MemberId;
+import io.atomix.cluster.Node;
+import io.atomix.cluster.discovery.BootstrapDiscoveryProvider;
+import io.atomix.core.Atomix;
+import io.atomix.core.AtomixBuilder;
+import io.atomix.core.profile.ConsensusProfile;
+import io.atomix.utils.net.Address;
+import io.atomix.utils.serializer.Namespace;
+import io.atomix.utils.serializer.Namespaces;
+import io.atomix.utils.serializer.Serializer;
 import server_client.constants.StringsConstants;
 import server_client.model.Message;
-import server_client.model.query.SendMessageQuery;
 import server_client.server.database.MemoryDB;
 import server_client.server.threads.handlers.MessageData;
 import server_client.server.threads.message_queues.first_stage.FirstQueueThread;
 
-import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
-public class MessageServer extends StateMachine {
+public class MessageServer {
+
 
     private final static Logger LOGGER = Logger.getLogger(MessageServer.class.getName());
 
@@ -55,40 +55,47 @@ public class MessageServer extends StateMachine {
         return fila3;
     }
 
-    public Message SendMessage(Commit<SendMessageQuery> commit) {
+//    public Message SendMessage(Commit<SendMessageQuery> commit) {
+//
+//        BlockingQueue<Message> answerQueue = new LinkedBlockingDeque<>();
+//
+//        SendMessageQuery sendMessageQuery = commit.operation();
+//        Message receivedMessage = sendMessageQuery.getMessage();
+//
+//        LOGGER.info("Mensagem obtida: " + receivedMessage);
+//
+//        if (receivedMessage == null || receivedMessage.getLastOption() < 1 || receivedMessage.getLastOption() > 4) {
+//            LOGGER.info(StringsConstants.ERR_INVALID_OPTION.toString());
+//            return new Message(StringsConstants.ERR_INVALID_OPTION.toString());
+//        }
+//
+//        MessageData messageData = new MessageData(receivedMessage, answerQueue);
+//
+//        ExecutorService executor = Executors.newSingleThreadExecutor();
+//        executor.submit(new FirstQueueThread(messageData));
+//
+//
+//        try {
+//            receivedMessage =  answerQueue.take();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//            return new Message(e.getMessage());
+//        }
+//
+//        return receivedMessage;
+//
+//    }
 
-        BlockingQueue<Message> answerQueue = new LinkedBlockingDeque<>();
-
-        SendMessageQuery sendMessageQuery = commit.operation();
-        Message receivedMessage = sendMessageQuery.getMessage();
-
-        LOGGER.info("Mensagem obtida: " + receivedMessage);
-
-        if (receivedMessage == null || receivedMessage.getLastOption() < 1 || receivedMessage.getLastOption() > 4) {
-            LOGGER.info(StringsConstants.ERR_INVALID_OPTION.toString());
-            return new Message(StringsConstants.ERR_INVALID_OPTION.toString());
-        }
-
-        MessageData messageData = new MessageData(receivedMessage, answerQueue);
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(new FirstQueueThread(messageData));
-
-
-        try {
-            receivedMessage =  answerQueue.take();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return new Message(e.getMessage());
-        }
-
-        return receivedMessage;
-
-    }
 
     public static void main(String[] args) {
         int myId = Integer.parseInt(args[0]);
         List<Address> addresses = new LinkedList<>();
+
+        Serializer serializer = Serializer.using(Namespace.builder()
+                .register(Namespaces.BASIC)
+                .register(MemberId.class)
+                .register(Message.class)
+                .build());
 
         for(int i = 1; i <args.length; i+=2)
         {
@@ -96,24 +103,97 @@ public class MessageServer extends StateMachine {
             addresses.add(address);
         }
 
-        CopycatServer.Builder builder = CopycatServer.builder(addresses.get(myId))
-                .withStateMachine(MessageServer::new)
-                .withTransport( NettyTransport.builder()
-                        .withThreads(4)
-                        .build())
-                .withStorage( Storage.builder()
-                        .withDirectory(new File("logs_"+myId)) //Must be unique
-                        .withStorageLevel(StorageLevel.DISK)
-                        .build());
-        CopycatServer server = builder.build();
+        AtomixBuilder builder = Atomix.builder();
 
-        if(myId == 0)
-        {
-            server.bootstrap().join();
-        }
-        else
-        {
-            server.join(addresses).join();
-        }
+        Atomix atomix = builder.withMemberId("member-"+myId)
+                .withAddress(addresses.get(myId))
+                .withMembershipProvider(BootstrapDiscoveryProvider.builder()
+                        .withNodes( Node.builder()
+                                        .withId("member-0")
+                                        .withAddress(addresses.get(0))
+                                        .build(),
+                                Node.builder()
+                                        .withId("member-1")
+                                        .withAddress(addresses.get(1))
+                                        .build(),
+                                Node.builder()
+                                        .withId("member-2")
+                                        .withAddress(addresses.get(2))
+                                        .build())
+                        .build())
+                .withProfiles(ConsensusProfile.builder().withDataPath("/tmp/member-"+myId).withMembers("member-1", "member-2", "member-3").build())
+                .build();
+
+        atomix.start().join();
+
+        System.out.println("Cluster joined");
+
+        atomix.getMembershipService().addListener(event -> {
+            switch (event.type()) {
+                case MEMBER_ADDED:
+                    System.out.println(event.subject().id() + " joined the cluster");
+                    break;
+                case MEMBER_REMOVED:
+                    System.out.println(event.subject().id() + " left the cluster");
+                    break;
+            }
+        });
+
+        BlockingQueue<Message> answerQueue = new LinkedBlockingDeque<>();
+
+//        SendMessageQuery sendMessageQuery = commit.operation();
+
+//        AtomicReference<Message> value = new AtomicReference<>();
+
+        atomix.getCommunicationService().subscribe("test", serializer::encode, message -> {
+
+            Message receivedMessage = serializer.decode(message);
+
+            LOGGER.info("Mensagem obtida: " + receivedMessage);
+
+            if (receivedMessage == null || receivedMessage.getLastOption() < 1 || receivedMessage.getLastOption() > 4) {
+                LOGGER.info(StringsConstants.ERR_INVALID_OPTION.toString());
+                return CompletableFuture.completedFuture(serializer.encode(new Message(StringsConstants.ERR_INVALID_OPTION.toString())));
+            }
+
+            MessageData messageData = new MessageData(receivedMessage, answerQueue);
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(new FirstQueueThread(messageData));
+
+
+            try {
+                receivedMessage =  answerQueue.take();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                return CompletableFuture.completedFuture(serializer.encode(new Message(e.getMessage())));
+            }
+
+            return CompletableFuture.completedFuture(serializer.encode(receivedMessage));
+        }, serializer::decode);
+
+//        Message receivedMessage = value.get();
+
+//        LOGGER.info("Mensagem obtida: " + receivedMessage);
+//
+//        if (receivedMessage == null || receivedMessage.getLastOption() < 1 || receivedMessage.getLastOption() > 4) {
+//            LOGGER.info(StringsConstants.ERR_INVALID_OPTION.toString());
+//            return new Message(StringsConstants.ERR_INVALID_OPTION.toString());
+//        }
+//
+//        MessageData messageData = new MessageData(receivedMessage, answerQueue);
+//
+//        ExecutorService executor = Executors.newSingleThreadExecutor();
+//        executor.submit(new FirstQueueThread(messageData));
+//
+//
+//        try {
+//            receivedMessage =  answerQueue.take();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//            return new Message(e.getMessage());
+//        }
+//
+//        return receivedMessage;
     }
 }
