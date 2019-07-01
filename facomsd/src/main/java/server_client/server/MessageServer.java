@@ -6,6 +6,8 @@ import io.atomix.cluster.discovery.BootstrapDiscoveryProvider;
 import io.atomix.core.Atomix;
 import io.atomix.core.AtomixBuilder;
 import io.atomix.core.profile.ConsensusProfile;
+import io.atomix.protocols.raft.MultiRaftProtocol;
+import io.atomix.protocols.raft.ReadConsistency;
 import io.atomix.utils.net.Address;
 import io.atomix.utils.serializer.Namespace;
 import io.atomix.utils.serializer.Namespaces;
@@ -19,8 +21,10 @@ import server_client.server.threads.message_queues.second_stage.SecondThirdQueue
 import server_client.server.threads.message_queues.third_stage.DatabaseProcessingThread;
 import server_client.server.threads.message_queues.third_stage.LogThread;
 
+import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
 
@@ -42,7 +46,6 @@ public class MessageServer {
     private static volatile LogThread logThread;
 
     static {
-        MemoryDB.getInstance();
         fila1 = new LinkedBlockingDeque<>();
         fila2 = new LinkedBlockingDeque<>();
         fila3 = new LinkedBlockingDeque<>();
@@ -115,6 +118,21 @@ public class MessageServer {
         atomix.start().join();
 
         System.out.println("Cluster joined");
+
+        if (MemoryDB.getDatabase() == null) {
+            MultiRaftProtocol protocol = MultiRaftProtocol.builder()
+                    .withReadConsistency(ReadConsistency.LINEARIZABLE)
+                    .build();
+
+            Map<BigInteger, String> map = atomix.<BigInteger, String>mapBuilder("my-map")
+                    .withProtocol(protocol)
+                    .withKeyType(BigInteger.class)
+                    .withValueType(String.class)
+                    .withCacheEnabled()
+                    .withCacheSize(1000)
+                    .build();
+            MemoryDB.startDB(map);
+        }
 
         atomix.getMembershipService().addListener(event -> {
             switch (event.type()) {

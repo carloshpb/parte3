@@ -23,14 +23,13 @@ public class MemoryDB {
     /* Nosso banco de dados (DB) em memória será esta simples lista
     (objeto ArrayList será criado para esta variável) */
     // private static volatile Map<BigInteger, byte[]> bancoEmMemoria;
-    private static volatile Map<BigInteger, String> bancoEmMemoria;
+    private static volatile Map<BigInteger, String> bancoEmMemoria = null;
 
     /* Construtor do MemoryDB
     * Ao criar o objeto MemoryDB na variável instance, ele já irá abrir o logFile no programa (openLog)
     * e irá ler o log (readLog), preenchendo o nosso BD (dados) conforme as ações que foram feitas no passado*/
     private MemoryDB() {
         super();
-        MemoryDB.restartDB();
     }
 
     public static synchronized MemoryDB getInstance() {
@@ -46,8 +45,15 @@ public class MemoryDB {
         return bancoEmMemoria;
     }
 
+    public static synchronized void startDB(Map<BigInteger, String> bancoEmMemoria) {
+        MemoryDB.bancoEmMemoria = bancoEmMemoria;
+        MemoryDB.restartDB();
+    }
+
     public static synchronized void restartDB() {
-        bancoEmMemoria = new ConcurrentHashMap<>();
+        if (!MemoryDB.bancoEmMemoria.isEmpty()) {
+            MemoryDB.bancoEmMemoria.clear();
+        }
         MessageRepositoryMemory.resetAtomicLongIdCreator();
         LogFile.startLog();
     }

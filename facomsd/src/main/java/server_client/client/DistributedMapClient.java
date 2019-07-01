@@ -37,7 +37,7 @@ public class DistributedMapClient {
         AtomixBuilder builder = Atomix.builder();
 
         Atomix atomix = builder.withMemberId("client-"+myId)
-                .withAddress(new Address("127.0.0.1", 6000))
+                .withAddress(new Address("127.0.0.1", (6000 + myId)))
                 .withMembershipProvider(BootstrapDiscoveryProvider.builder()
                         .withNodes( Node.builder()
                                         .withId("member-0")
@@ -71,46 +71,13 @@ public class DistributedMapClient {
                 case 3:
                 case 4:
                     atomix.getCommunicationService().send("test", message, serializer::encode, serializer::decode, MemberId.from("member-" + args[1])).thenAccept(System.out::println);
-//                    atomix.getCommunicationService().send("test", message, MemberId.from("member-" + args[1])).thenAccept(System.out::println);
                     break;
                 default:
                     exit = true;
+                    atomix.stop();
                     break;
             }
         }
-
-//        Serializer serializer = Serializer.using(Namespace.builder()
-//                .register(Namespaces.BASIC)
-//                .register(MemberId.class)
-//                .register(Message.class)
-//                .build());
-
-//        Message test = new Message(1,1,"Ola");
-//
-//        atomix.getCommunicationService()
-//
-//        atomix.getCommunicationService().send("testando", test, MemberId.from("member-0"));
-
-
-
-//        DistributedMap<Object, Object> map = atomix.mapBuilder("my-map")
-//                .withCacheEnabled()
-//                .build();
-//
-//        map.put("foo", "Hello world!");
-//
-//        System.out.println(map.get("foo"));
-//        System.out.println(map.get("bar"));
-//
-//        String value = (String) map.get("foo");
-//
-//        if (map.replace("foo", value, "Hello world again!")) {
-//            System.out.println();
-//        }
-//
-//        System.out.println(map.get("foo"));
-//        System.out.println(map.get("bar"));
-
     }
 }
 

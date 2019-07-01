@@ -183,7 +183,7 @@ public class AppTest {
 
     @AfterAll
     private static synchronized void cleanDB() {
-        MemoryDB.restartDB();
+        MemoryDB.getDatabase().clear();
         LogFile.deleteLogFile();
     }
 
