@@ -1,5 +1,6 @@
 package server_client.server.database;
 
+import io.atomix.core.map.AtomicMap;
 import server_client.server.repository.impl.MessageRepositoryMemory;
 
 import java.math.BigInteger;
@@ -47,13 +48,16 @@ public class MemoryDB {
 
     public static synchronized void startDB(Map<BigInteger, String> bancoEmMemoria) {
         MemoryDB.bancoEmMemoria = bancoEmMemoria;
-        MemoryDB.restartDB();
+        MemoryDB.resetAtomicStartLog();
     }
 
     public static synchronized void restartDB() {
-        if (!MemoryDB.bancoEmMemoria.isEmpty()) {
-            MemoryDB.bancoEmMemoria.clear();
-        }
+        MemoryDB.bancoEmMemoria.clear();
+        MemoryDB.resetAtomicStartLog();
+
+    }
+
+    private static synchronized void resetAtomicStartLog() {
         MessageRepositoryMemory.resetAtomicLongIdCreator();
         LogFile.startLog();
     }

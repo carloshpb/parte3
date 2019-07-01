@@ -1,5 +1,6 @@
 package server_client.server.repository.impl;
 
+import io.atomix.core.map.AtomicMap;
 import server_client.model.Message;
 import server_client.server.repository.MessageRepository;
 import server_client.server.database.MemoryDB;
@@ -88,8 +89,8 @@ public class MessageRepositoryMemory implements MessageRepository {
 
         } else if (MemoryDB.getDatabase().containsValue(message.getMessage())) {
 
-            long id = getKey(MemoryDB.getDatabase(), MemoryDB.getDatabase().get(message.getMessage())).longValue();
-            answer = new Message(3, id, StringsConstants.ERR_EXISTENT_MESSAGE.toString());
+            //long id = getKey(MemoryDB.getDatabase(), MemoryDB.getDatabase().get(message.getMessage())).longValue();
+            answer = new Message(3, StringsConstants.ERR_EXISTENT_MESSAGE.toString());
 
         } else {
 

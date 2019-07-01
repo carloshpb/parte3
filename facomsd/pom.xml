@@ -12,7 +12,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <atomix.version>3.0.11</atomix.version>
+    <atomix.version>3.0.6</atomix.version>
 <!--    <atomix.version>3.0.6</atomix.version>-->
   </properties>
   <build>

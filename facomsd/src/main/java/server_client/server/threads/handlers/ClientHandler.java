@@ -3,9 +3,6 @@ package server_client.server.threads.handlers;
 import server_client.constants.StringsConstants;
 import server_client.model.Message;
 import server_client.server.threads.message_queues.first_stage.FirstQueueThread;
-import server_client.server.threads.message_queues.second_stage.SecondThirdQueueThread;
-import server_client.server.threads.message_queues.third_stage.DatabaseProcessingThread;
-import server_client.server.threads.message_queues.third_stage.LogThread;
 
 import java.io.EOFException;
 import java.io.IOException;
