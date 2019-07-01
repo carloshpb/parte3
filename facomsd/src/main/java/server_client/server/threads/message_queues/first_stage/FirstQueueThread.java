@@ -1,6 +1,6 @@
 package server_client.server.threads.message_queues.first_stage;
 
-import server_client.server.threads.ServerThread;
+import server_client.server.MessageServer;
 import server_client.server.threads.handlers.MessageData;
 
 import java.util.logging.Logger;
@@ -20,7 +20,7 @@ public class FirstQueueThread implements Runnable{
 
         try {
             LOGGER.info("Mensagem " + this.message.getMessage() + " será colocada na Fila1.");
-            ServerThread.getFila1().put(message);
+            MessageServer.getFila1().put(message);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

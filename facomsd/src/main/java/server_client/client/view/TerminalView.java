@@ -17,19 +17,19 @@ public class TerminalView {
     private long id;
     private String message;
 
-    private volatile boolean wait = false;
+//    private volatile boolean wait = false;
 
     public TerminalView() {
     }
 
     public Message startReadMessage() {
 
-        while (this.wait) { }
+//        while (this.wait) { }
 
         this.beginIntro();
         this.chooseOption();
         Message answer = this.writeMessage();
-        this.wait = true;
+//        this.wait = true;
         return answer;
     }
 
@@ -132,8 +132,8 @@ public class TerminalView {
         }
     }
 
-    public void readMessage(Message message) {
-        System.out.println(message.getMessage());
-        this.wait = false;
-    }
+//    public void readMessage(Message message) {
+//        System.out.println(message.getMessage());
+//        this.wait = false;
+//    }
 }

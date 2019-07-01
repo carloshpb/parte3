@@ -20,8 +20,8 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.junit.platform:junit-platform-commons:1.4.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.junit.jupiter:junit-jupiter-engine:5.4.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.junit.platform:junit-platform-engine:1.4.1" level="project" />
-    <orderEntry type="library" name="Maven: io.atomix:atomix:3.0.6" level="project" />
-    <orderEntry type="library" name="Maven: io.atomix:atomix-cluster:3.0.6" level="project" />
+    <orderEntry type="library" name="Maven: io.atomix:atomix:3.0.11" level="project" />
+    <orderEntry type="library" name="Maven: io.atomix:atomix-cluster:3.0.11" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-transport:4.1.27.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-buffer:4.1.27.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-resolver:4.1.27.Final" level="project" />
@@ -30,9 +30,9 @@
     <orderEntry type="library" name="Maven: io.netty:netty-transport-native-epoll:linux-x86_64:4.1.27.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-common:4.1.27.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-transport-native-unix-common:4.1.27.Final" level="project" />
-    <orderEntry type="library" name="Maven: io.atomix:atomix-primitive:3.0.6" level="project" />
-    <orderEntry type="library" name="Maven: io.atomix:atomix-storage:3.0.6" level="project" />
-    <orderEntry type="library" name="Maven: io.atomix:atomix-utils:3.0.6" level="project" />
+    <orderEntry type="library" name="Maven: io.atomix:atomix-primitive:3.0.11" level="project" />
+    <orderEntry type="library" name="Maven: io.atomix:atomix-storage:3.0.11" level="project" />
+    <orderEntry type="library" name="Maven: io.atomix:atomix-utils:3.0.11" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:22.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.findbugs:jsr305:1.3.9" level="project" />
     <orderEntry type="library" name="Maven: com.google.errorprone:error_prone_annotations:2.0.18" level="project" />
@@ -47,10 +47,12 @@
     <orderEntry type="library" name="Maven: com.typesafe:config:1.3.2" level="project" />
     <orderEntry type="library" name="Maven: io.github.classgraph:classgraph:4.2.3" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.7" level="project" />
-    <orderEntry type="library" name="Maven: io.atomix:atomix-raft:3.0.6" level="project" />
-    <orderEntry type="library" name="Maven: io.atomix:atomix-primary-backup:3.0.6" level="project" />
-    <orderEntry type="library" name="Maven: io.atomix:atomix-gossip:3.0.6" level="project" />
+    <orderEntry type="library" name="Maven: io.atomix:atomix-raft:3.0.11" level="project" />
+    <orderEntry type="library" name="Maven: io.atomix:atomix-primary-backup:3.0.11" level="project" />
+    <orderEntry type="library" name="Maven: io.atomix:atomix-gossip:3.0.11" level="project" />
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-api:2.11.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-core:2.11.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:slf4j-log4j12:1.7.26" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: log4j:log4j:1.2.17" level="project" />
   </component>
 </module>

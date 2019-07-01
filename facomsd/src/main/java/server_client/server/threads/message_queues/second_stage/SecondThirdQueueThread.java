@@ -1,7 +1,7 @@
 package server_client.server.threads.message_queues.second_stage;
 
 import server_client.model.Message;
-import server_client.server.threads.ServerThread;
+import server_client.server.MessageServer;
 import server_client.server.threads.handlers.MessageData;
 
 import java.util.logging.Logger;
@@ -17,7 +17,7 @@ public class SecondThirdQueueThread implements Runnable{
 
             while (messageData == null) {
                 try {
-                    messageData = ServerThread.getFila1().take();
+                    messageData = MessageServer.getFila1().take();
                     LOGGER.info("Mensagem " + messageData.getMessage() + " pega da Fila1.");
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -29,7 +29,7 @@ public class SecondThirdQueueThread implements Runnable{
             messageData.setMessage(messageDB);
             try {
                 LOGGER.info("Mensagem " + messageData.getMessage() + " será colocada na Fila3.");
-                ServerThread.getFila3().put(messageData);
+                MessageServer.getFila3().put(messageData);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -39,7 +39,7 @@ public class SecondThirdQueueThread implements Runnable{
                 messageLog = new Message(messageLog.getLastOption(), messageLog.getId(), messageLog.getMessage());
                 try {
                     LOGGER.info("Mensagem " + messageLog + " será colocada na Fila2.");
-                    ServerThread.getFila2().put(messageLog);
+                    MessageServer.getFila2().put(messageLog);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

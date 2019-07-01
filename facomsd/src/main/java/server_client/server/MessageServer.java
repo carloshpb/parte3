@@ -15,11 +15,13 @@ import server_client.model.Message;
 import server_client.server.database.MemoryDB;
 import server_client.server.threads.handlers.MessageData;
 import server_client.server.threads.message_queues.first_stage.FirstQueueThread;
+import server_client.server.threads.message_queues.second_stage.SecondThirdQueueThread;
+import server_client.server.threads.message_queues.third_stage.DatabaseProcessingThread;
+import server_client.server.threads.message_queues.third_stage.LogThread;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
 public class MessageServer {
@@ -33,14 +35,32 @@ public class MessageServer {
 
     private volatile boolean exit = false;
 
-    private ExecutorService clientThreadPool = Executors.newFixedThreadPool(10);
-    private ExecutorService queueThreadPool = Executors.newFixedThreadPool(3);
+    private static volatile ExecutorService queueThreadPool = Executors.newFixedThreadPool(3);
+
+    private static volatile SecondThirdQueueThread secondThirdQueueThread;
+    private static volatile DatabaseProcessingThread databaseProcessingThread;
+    private static volatile LogThread logThread;
 
     static {
         MemoryDB.getInstance();
         fila1 = new LinkedBlockingDeque<>();
         fila2 = new LinkedBlockingDeque<>();
         fila3 = new LinkedBlockingDeque<>();
+
+        if (secondThirdQueueThread == null) {
+            secondThirdQueueThread = new SecondThirdQueueThread();
+            queueThreadPool.submit(secondThirdQueueThread);
+        }
+
+        if (databaseProcessingThread == null) {
+            databaseProcessingThread = new DatabaseProcessingThread();
+            queueThreadPool.submit(databaseProcessingThread);
+        }
+
+        if (logThread == null) {
+            logThread = new LogThread();
+            queueThreadPool.submit(logThread);
+        }
     }
 
     public static BlockingQueue<MessageData> getFila1() {
@@ -54,38 +74,6 @@ public class MessageServer {
     public static BlockingQueue<MessageData> getFila3() {
         return fila3;
     }
-
-//    public Message SendMessage(Commit<SendMessageQuery> commit) {
-//
-//        BlockingQueue<Message> answerQueue = new LinkedBlockingDeque<>();
-//
-//        SendMessageQuery sendMessageQuery = commit.operation();
-//        Message receivedMessage = sendMessageQuery.getMessage();
-//
-//        LOGGER.info("Mensagem obtida: " + receivedMessage);
-//
-//        if (receivedMessage == null || receivedMessage.getLastOption() < 1 || receivedMessage.getLastOption() > 4) {
-//            LOGGER.info(StringsConstants.ERR_INVALID_OPTION.toString());
-//            return new Message(StringsConstants.ERR_INVALID_OPTION.toString());
-//        }
-//
-//        MessageData messageData = new MessageData(receivedMessage, answerQueue);
-//
-//        ExecutorService executor = Executors.newSingleThreadExecutor();
-//        executor.submit(new FirstQueueThread(messageData));
-//
-//
-//        try {
-//            receivedMessage =  answerQueue.take();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//            return new Message(e.getMessage());
-//        }
-//
-//        return receivedMessage;
-//
-//    }
-
 
     public static void main(String[] args) {
         int myId = Integer.parseInt(args[0]);
@@ -141,19 +129,15 @@ public class MessageServer {
 
         BlockingQueue<Message> answerQueue = new LinkedBlockingDeque<>();
 
-//        SendMessageQuery sendMessageQuery = commit.operation();
+        atomix.getCommunicationService().subscribe("test", serializer::decode, message -> {
 
-//        AtomicReference<Message> value = new AtomicReference<>();
-
-        atomix.getCommunicationService().subscribe("test", serializer::encode, message -> {
-
-            Message receivedMessage = serializer.decode(message);
+            Message receivedMessage = (Message) message;
 
             LOGGER.info("Mensagem obtida: " + receivedMessage);
 
             if (receivedMessage == null || receivedMessage.getLastOption() < 1 || receivedMessage.getLastOption() > 4) {
                 LOGGER.info(StringsConstants.ERR_INVALID_OPTION.toString());
-                return CompletableFuture.completedFuture(serializer.encode(new Message(StringsConstants.ERR_INVALID_OPTION.toString())));
+                return CompletableFuture.completedFuture(new Message(StringsConstants.ERR_INVALID_OPTION.toString()));
             }
 
             MessageData messageData = new MessageData(receivedMessage, answerQueue);
@@ -166,34 +150,10 @@ public class MessageServer {
                 receivedMessage =  answerQueue.take();
             } catch (InterruptedException e) {
                 e.printStackTrace();
-                return CompletableFuture.completedFuture(serializer.encode(new Message(e.getMessage())));
+                return CompletableFuture.completedFuture(new Message(e.getMessage()));
             }
 
-            return CompletableFuture.completedFuture(serializer.encode(receivedMessage));
-        }, serializer::decode);
-
-//        Message receivedMessage = value.get();
-
-//        LOGGER.info("Mensagem obtida: " + receivedMessage);
-//
-//        if (receivedMessage == null || receivedMessage.getLastOption() < 1 || receivedMessage.getLastOption() > 4) {
-//            LOGGER.info(StringsConstants.ERR_INVALID_OPTION.toString());
-//            return new Message(StringsConstants.ERR_INVALID_OPTION.toString());
-//        }
-//
-//        MessageData messageData = new MessageData(receivedMessage, answerQueue);
-//
-//        ExecutorService executor = Executors.newSingleThreadExecutor();
-//        executor.submit(new FirstQueueThread(messageData));
-//
-//
-//        try {
-//            receivedMessage =  answerQueue.take();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//            return new Message(e.getMessage());
-//        }
-//
-//        return receivedMessage;
+            return CompletableFuture.completedFuture(receivedMessage);
+        }, serializer::encode);
     }
 }

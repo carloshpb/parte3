@@ -71,6 +71,7 @@ public class DistributedMapClient {
                 case 3:
                 case 4:
                     atomix.getCommunicationService().send("test", message, serializer::encode, serializer::decode, MemberId.from("member-" + args[1])).thenAccept(System.out::println);
+//                    atomix.getCommunicationService().send("test", message, MemberId.from("member-" + args[1])).thenAccept(System.out::println);
                     break;
                 default:
                     exit = true;

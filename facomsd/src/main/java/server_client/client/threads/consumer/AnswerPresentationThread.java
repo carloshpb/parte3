@@ -64,7 +64,7 @@ public class AnswerPresentationThread implements Runnable {
                         System.out.println("Shutting down.");
                         this.shutdown();
                     } else {
-                        this.view.readMessage(answer);
+//                        this.view.readMessage(answer);
                         answer = null;
                     }
                 }

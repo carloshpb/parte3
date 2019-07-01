@@ -1,7 +1,7 @@
 package server_client.server.threads.message_queues.third_stage;
 
+import server_client.server.MessageServer;
 import server_client.server.database.LogFile;
-import server_client.server.threads.ServerThread;
 
 public class LogThread implements Runnable {
 
@@ -9,7 +9,7 @@ public class LogThread implements Runnable {
     public void run() {
         while (!Thread.interrupted()) {
             try {
-                LogFile.saveOperationLog(ServerThread.getFila2().take());
+                LogFile.saveOperationLog(MessageServer.getFila2().take());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
