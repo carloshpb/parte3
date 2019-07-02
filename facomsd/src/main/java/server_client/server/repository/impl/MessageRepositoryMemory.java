@@ -89,7 +89,7 @@ public class MessageRepositoryMemory implements MessageRepository {
 
         } else if (MemoryDB.getDatabase().containsValue(message.getMessage())) {
 
-            //long id = getKey(MemoryDB.getDatabase(), MemoryDB.getDatabase().get(message.getMessage())).longValue();
+            long id = getKey(MemoryDB.getDatabase(), MemoryDB.getDatabase().get(message.getMessage())).longValue();
             answer = new Message(3, StringsConstants.ERR_EXISTENT_MESSAGE.toString());
 
         } else {

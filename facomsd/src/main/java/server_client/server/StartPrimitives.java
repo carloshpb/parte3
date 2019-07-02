@@ -1,5 +1,6 @@
 package server_client.server;
 
+import io.atomix.cluster.MemberId;
 import io.atomix.cluster.Node;
 import io.atomix.cluster.discovery.BootstrapDiscoveryProvider;
 import io.atomix.core.Atomix;
@@ -9,6 +10,9 @@ import io.atomix.core.profile.ConsensusProfile;
 import io.atomix.protocols.raft.MultiRaftProtocol;
 import io.atomix.protocols.raft.ReadConsistency;
 import io.atomix.utils.net.Address;
+import io.atomix.utils.serializer.Namespace;
+import io.atomix.utils.serializer.Namespaces;
+import io.atomix.utils.serializer.Serializer;
 import server_client.model.Message;
 import server_client.server.database.MemoryDB;
 import server_client.server.threads.handlers.MessageData;
@@ -54,6 +58,57 @@ public class StartPrimitives {
 
     public static void main(String[] args) {
 
+        int myId = Integer.parseInt(args[0]);
+        List<Address> addresses = new LinkedList<>();
+
+        for(int i = 1; i <args.length; i+=2)
+        {
+            Address address = new Address(args[i], Integer.parseInt(args[i+1]));
+            addresses.add(address);
+        }
+
+        AtomixBuilder builder = Atomix.builder();
+
+        Atomix atomix = builder.withMemberId("starter")
+                .withAddress(addresses.get(myId))
+                .withMembershipProvider(BootstrapDiscoveryProvider.builder()
+                        .withNodes(
+                                Node.builder()
+                                        .withId("member-0")
+                                        .withAddress(addresses.get(0))
+                                        .build(),
+                                Node.builder()
+                                        .withId("member-1")
+                                        .withAddress(addresses.get(1))
+                                        .build(),
+                                Node.builder()
+                                        .withId("member-2")
+                                        .withAddress(addresses.get(2))
+                                        .build(),
+                                Node.builder()
+                                        .withId("starter")
+                                        .withAddress(addresses.get(3))
+                                        .build()
+                                )
+                        .build())
+                .withProfiles(ConsensusProfile.builder().withDataPath("/tmp/starter").withMembers("member-1", "member-2", "member-3", "starter").build())
+                .build();
+
+        atomix.start().join();
+
+        System.out.println("Cluster joined");
+
+        atomix.getMembershipService().addListener(event -> {
+            switch (event.type()) {
+                case MEMBER_ADDED:
+                    System.out.println(event.subject().id() + " joined the cluster");
+                    break;
+                case MEMBER_REMOVED:
+                    System.out.println(event.subject().id() + " left the cluster");
+                    break;
+            }
+        });
+
 //        List<Address> addresses = new LinkedList<>();
 //
 //        for(int i = 1; i <args.length; i+=2)
@@ -87,24 +142,24 @@ public class StartPrimitives {
 //                .withProfiles(ConsensusProfile.builder().withDataPath("/tmp/starter").withMembers("starter", "member-1", "member-2", "member-3").build())
 //                .build();
 
-        fila1 = new LinkedBlockingDeque<>();
-        fila2 = new LinkedBlockingDeque<>();
-        fila3 = new LinkedBlockingDeque<>();
-
-        if (secondThirdQueueThread == null) {
-            secondThirdQueueThread = new SecondThirdQueueThread();
-            queueThreadPool.submit(secondThirdQueueThread);
-        }
-
-        if (databaseProcessingThread == null) {
-            databaseProcessingThread = new DatabaseProcessingThread();
-            queueThreadPool.submit(databaseProcessingThread);
-        }
-
-        if (logThread == null) {
-            logThread = new LogThread();
-            queueThreadPool.submit(logThread);
-        }
+//        fila1 = new LinkedBlockingDeque<>();
+//        fila2 = new LinkedBlockingDeque<>();
+//        fila3 = new LinkedBlockingDeque<>();
+//
+//        if (secondThirdQueueThread == null) {
+//            secondThirdQueueThread = new SecondThirdQueueThread();
+//            queueThreadPool.submit(secondThirdQueueThread);
+//        }
+//
+//        if (databaseProcessingThread == null) {
+//            databaseProcessingThread = new DatabaseProcessingThread();
+//            queueThreadPool.submit(databaseProcessingThread);
+//        }
+//
+//        if (logThread == null) {
+//            logThread = new LogThread();
+//            queueThreadPool.submit(logThread);
+//        }
 
 //        MultiRaftProtocol protocol = MultiRaftProtocol.builder()
 //                .withReadConsistency(ReadConsistency.LINEARIZABLE)
@@ -136,5 +191,9 @@ public class StartPrimitives {
 //        System.out.println("Cluster joined");
 
         MemoryDB.startDB(new ConcurrentHashMap<>());
+    }
+
+    private static void startPrimitives() {
+
     }
 }

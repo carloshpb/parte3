@@ -47,9 +47,9 @@ public class ServerThread implements Runnable {
             LOGGER.info("Servidor iniciado na porta " + serverSocket.getLocalPort());
             LOGGER.info("A espera de um cliente conectar...");
 
-            this.queueThreadPool.submit(new SecondThirdQueueThread());
-            this.queueThreadPool.submit(new DatabaseProcessingThread());
-            this.queueThreadPool.submit(new LogThread());
+//            this.queueThreadPool.submit(new SecondThirdQueueThread());
+//            this.queueThreadPool.submit(new DatabaseProcessingThread());
+//            this.queueThreadPool.submit(new LogThread());
 
             this.getAndInsertClientConnection();
         } catch (IOException e) {

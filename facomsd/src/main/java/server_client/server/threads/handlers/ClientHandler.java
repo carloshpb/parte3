@@ -87,7 +87,7 @@ public class ClientHandler implements Runnable {
             this.messageData = new MessageData(message, this.answerQueue);
 
             ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(new FirstQueueThread(this.messageData));
+            //executor.submit(new FirstQueueThread(this.messageData));
 
             this.sendAnswer(this.answerQueue.take());
         }
