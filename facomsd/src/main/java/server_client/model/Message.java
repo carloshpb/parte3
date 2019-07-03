@@ -1,6 +1,7 @@
 package server_client.model;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.Objects;
 
 /*
@@ -14,10 +15,10 @@ public class Message implements Serializable {
 
     private static final long serialVersionUID = 2627984335773148702L;
     private int lastOption;
-    private long id;
+    private BigInteger id;
     private String message;
 
-    public Message(int option, long id, String message) {
+    public Message(int option, BigInteger id, String message) {
 
         this.lastOption = option;
         this.id = id;
@@ -27,18 +28,18 @@ public class Message implements Serializable {
     public Message(int option, String message) {
 
         this.lastOption = option;
-        this.id = -1;
+        this.id = BigInteger.valueOf(-1);
         this.message = message;
     }
 
-    public Message(int option, long id) {
+    public Message(int option, BigInteger id) {
 
         this.lastOption = option;
         this.id = id;
         this.message = null;
     }
 
-    public Message(long id, String message) {
+    public Message(BigInteger id, String message) {
         this.lastOption = -1;
         this.id = id;
         this.message = message;
@@ -46,13 +47,13 @@ public class Message implements Serializable {
 
     public Message(String message) {
         this.lastOption = -1;
-        this.id = -1;
+        this.id = BigInteger.valueOf(-1);
         this.message = message;
     }
 
     public Message() {
         this.lastOption = -1;
-        this.id = -1;
+        this.id = BigInteger.valueOf(-1);
         this.message = null;
     }
 
@@ -66,12 +67,12 @@ public class Message implements Serializable {
         this.lastOption = option;
     }
 
-    public long getId() {
+    public BigInteger getId() {
 
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(BigInteger id) {
 
         this.id = id;
     }
@@ -103,9 +104,9 @@ public class Message implements Serializable {
     @Override
     public String toString() {
 
-        if (this.id == -1 && this.message != null && this.message.trim().isEmpty()) {
+        if ((this.id.compareTo(BigInteger.valueOf(-1)) == 0) && this.message != null && this.message.trim().isEmpty()) {
             return "(" + this.lastOption + ",)";
-        } else if (this.id == -1) {
+        } else if (this.id.compareTo(BigInteger.valueOf(-1)) == 0) {
             return "(" + this.lastOption + "," + this.message + ")";
         } else if (this.message == null) {
             return "(" + this.lastOption + "," + this.id + ")";

@@ -18,7 +18,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class DistributedMapClient {
+
+    // args -> 0 0 127.0.0.1 5000 127.0.0.1 5001 127.0.0.1 5002
+    //        (myId) (id do server) (sequência de endereços dos servidores)
     public static void main(String[] args) {
+        // ----------------------------------------------
+        // Inicialização do servidor no cluster do Atomix
+        // ----------------------------------------------
         int myId = Integer.parseInt(args[0]);
         List<Address> addresses = new LinkedList<>();
 
@@ -58,11 +64,19 @@ public class DistributedMapClient {
 
         System.out.println("Cluster joined");
 
+
+        // ----------------------------------------------
+        //  Criação do objeto do View (textos que aparecerão no terminal do respectivo Sistema Operacional)
+        // ----------------------------------------------
         final TerminalView terminalView = new TerminalView();
 
-        boolean exit = false;
 
+        // ----------------------------------------------
+        //  Loop da chamada do método que inicia a sequência do View, para obter a mensagem do usuário e enviar ao server
+        // ----------------------------------------------
+        boolean exit = false;
         while (!exit) {
+            // Pede mensagem ao usuário
             Message message = terminalView.startReadMessage();
 
             switch (message.getLastOption()) {
@@ -70,9 +84,14 @@ public class DistributedMapClient {
                 case 2:
                 case 3:
                 case 4:
+                    // Serviço de comunicação do Atomix, responsavel para enviar a mensagem ao server do MemberId
+//                    atomix.getCommunicationService().send("test", message, serializer::encode, serializer::decode, MemberId.from("member-" + args[1])).thenAccept(response -> {
+//                        System.out.println(((Message)response).getMessage());
+//                    });
                     atomix.getCommunicationService().send("test", message, serializer::encode, serializer::decode, MemberId.from("member-" + args[1])).thenAccept(System.out::println);
                     break;
                 default:
+                    // Qualquer outro valor além de 1,2,3 e 4, vai fechar a conexão com o server e fechar o cliente.
                     exit = true;
                     atomix.stop();
                     break;

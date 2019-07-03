@@ -1,5 +1,10 @@
 package server_client.constants;
 
+/*
+    StringsConstants
+    - Classe com as mensagens que serão usadas para aparecer na tela do cliente ou no terminal do servidor.
+ */
+
 public enum StringsConstants {
 
     MENU_OPTIONS ("1 - Criar mensagem (Create)\n2 - Ler mensagem (Read)\n3 - Atualizar mensagem (Update)\n4 - Deletar mensagem (Delete)\n5 - Sair (Quit)\nEscolha a opção: "),
@@ -16,6 +21,7 @@ public enum StringsConstants {
     ERR_CHOOSE_SINGLE_OPTION ("Escolha apenas uma das opções!"),
     ERR_EMPTY_SAVE_MESSAGE ("Não foi possível salvar a mensagem, pois ela está vazia."),
     ERR_EMPTY_UPDATE_MESSAGE ("Não foi possível atualizar a mensagem, pois a atualização está vazia."),
+    ERR_EXISTENT_ID ("Este ID já existe no banco de dados."),
     ERR_EXISTENT_MESSAGE ("Esta mensagem já existe no banco de dados."),
     ERR_INVALID_OPTION ("Opção inválida."),
     ERR_NO_ANSWER("Não obteve resposta do servidor. Desconectando ..."),

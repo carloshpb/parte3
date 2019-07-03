@@ -5,52 +5,56 @@ import server_client.server.repository.MessageRepository;
 import server_client.server.repository.impl.MessageRepositoryMemory;
 import server_client.server.services.MessageService;
 import server_client.constants.StringsConstants;
-import server_client.server.threads.handlers.MessageData;
 
+import java.math.BigInteger;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class MessageServiceImpl implements MessageService {
 
     private final static Logger LOGGER = Logger.getLogger(MessageServiceImpl.class.getName());
 
-    private MessageRepository messageRepository = new MessageRepositoryMemory();
+    private MessageRepository messageRepository;
 
+    public MessageServiceImpl(Map<BigInteger, String> mapDB) {
+        this.messageRepository =  new MessageRepositoryMemory(mapDB);
+    }
+
+    // Método que agirá de forma síncrona no servidor (apenas uma thread pode usar este método por vez)
+    // com o objetivo de escolher o respectivo método que usará para a mensagem sobre o banco de dados
+    // (create, read, update, delete)
+    // Este é o único método que deve ser utilizado desta classe
     @Override
-    public synchronized void processMessage(MessageData messageData) {
+    public synchronized Message processMessage(Message message) {
 
-        LOGGER.info("Mensagem " + messageData.getMessage() + " será processada para o banco de dados.");
+        LOGGER.info("Mensagem " + message.getMessage() + " será processada para o banco de dados.");
 
         Message serverAnswer = null;
 
-        switch (messageData.getMessage().getLastOption()) {
+        switch (message.getLastOption()) {
             case 1:
-                serverAnswer = this.createMessage(messageData.getMessage());
+                serverAnswer = this.createMessage(message);
                 break;
             case 2:
-                serverAnswer = this.readMessage(messageData.getMessage());
+                serverAnswer = this.readMessage(message);
                 break;
             case 3:
-                serverAnswer = this.updateMessage(messageData.getMessage());
+                serverAnswer = this.updateMessage(message);
                 break;
             case 4:
-                serverAnswer = this.deleteMessage(messageData.getMessage());
+                serverAnswer = this.deleteMessage(message);
                 break;
             default:
                 serverAnswer = new Message(StringsConstants.ERR_INVALID_OPTION.toString());
                 break;
         }
 
-        if (messageData.getAnswerQueue() != null) {
-            try {
-                messageData.getAnswerQueue().put(serverAnswer);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        return serverAnswer;
     }
 
     @Override
     public Message createMessage(Message message) {
+        // Se a mensagem for vazia ou Null , retornará mensagem de erro
         if (message.getMessage() == null || message.getMessage().trim().isEmpty()) {
             return new Message(1, StringsConstants.ERR_EMPTY_SAVE_MESSAGE.toString());
         }
@@ -66,7 +70,7 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public Message updateMessage(Message message) {
-
+        // Se a mensagem for vazia ou Null , retornará mensagem de erro
         if (message.getMessage() == null || message.getMessage().trim().isEmpty()) {
             return new Message(3, StringsConstants.ERR_EMPTY_UPDATE_MESSAGE.toString());
         }

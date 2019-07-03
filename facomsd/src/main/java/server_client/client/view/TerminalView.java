@@ -3,9 +3,16 @@ package server_client.client.view;
 import server_client.constants.StringsConstants;
 import server_client.model.Message;
 
+import java.math.BigInteger;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.logging.Logger;
+
+/*
+    Terminal View
+    - Esta classe executa em sequência, tanto que o único método público desta classe é o startReadMessage().
+    - Para entender, basta ler a ordem de chamada dos métodos que estão dentro do startReadMessage().
+ */
 
 public class TerminalView {
 
@@ -14,22 +21,17 @@ public class TerminalView {
     private Scanner scanner = new Scanner(System.in);
 
     private int option;
-    private long id;
+    private BigInteger id;
     private String message;
-
-//    private volatile boolean wait = false;
 
     public TerminalView() {
     }
 
     public Message startReadMessage() {
 
-//        while (this.wait) { }
-
         this.beginIntro();
         this.chooseOption();
         Message answer = this.writeMessage();
-//        this.wait = true;
         return answer;
     }
 
@@ -39,7 +41,7 @@ public class TerminalView {
         System.out.println(StringsConstants.MENU_OPTIONS.toString());
 
         this.option = -1;
-        this.id = -1;
+        this.id = BigInteger.valueOf(-1);
         this.message = null;
     }
 
@@ -48,7 +50,7 @@ public class TerminalView {
         while (true) {
             try {
                 if (this.option == -1) {
-                    this.option = Integer.parseInt(scanner.nextLine());
+                    this.option = scanner.nextInt();
                 }
 
                 if (this.option < 1 || this.option > 5) {
@@ -67,20 +69,9 @@ public class TerminalView {
         switch (this.option) {
 
             case 1:
-                System.out.println(StringsConstants.TYPE_MESSAGE.toString());
-                while (this.message == null) {
-                    try {
-                        this.message = scanner.nextLine();
-
-                        if (this.message.trim().isEmpty()) {
-                            throw new Exception(StringsConstants.ERR_EMPTY_SAVE_MESSAGE.toString());
-                        }
-
-                    } catch (Exception e) {
-                        LOGGER.severe(e.getMessage());
-                        this.message = null;
-                    }
-                }
+            case 3:
+                this.typeId();
+                this.typeMessage();
                 break;
 
 
@@ -88,28 +79,6 @@ public class TerminalView {
             case 4:
                 this.typeId();
                 break;
-
-
-            case 3:
-                this.typeId();
-
-                while (this.message == null) {
-                    System.out.println(StringsConstants.TYPE_MESSAGE.toString());
-
-                    try {
-                        this.message = scanner.nextLine();
-
-                        if (this.message.trim().isEmpty()) {
-                            throw new Exception(StringsConstants.ERR_EMPTY_SAVE_MESSAGE.toString());
-                        }
-
-                    } catch (Exception e) {
-                        LOGGER.severe(e.getMessage());
-                        this.message = null;
-                    }
-                }
-                break;
-
 
             case 5:
                 break;
@@ -119,21 +88,35 @@ public class TerminalView {
         return new Message(this.option, this.id, this.message);
     }
 
+    private void typeMessage() {
+        do {
+            System.out.println(StringsConstants.TYPE_MESSAGE.toString());
+            try {
+                this.message = scanner.nextLine();
+
+                if (this.message.trim().isEmpty()) {
+                    throw new Exception(StringsConstants.ERR_EMPTY_SAVE_MESSAGE.toString());
+                }
+
+            } catch (Exception e) {
+                LOGGER.severe(e.getMessage());
+                this.message = null;
+            }
+        } while (this.message == null);
+    }
+
     private void typeId() {
-        while (this.id == -1) {
+        while (this.id.compareTo(BigInteger.valueOf(-1)) == 0) {
             System.out.println(StringsConstants.TYPE_ID.toString());
 
             try {
-                this.id = Integer.parseInt(scanner.nextLine());
+                this.id = scanner.nextBigInteger();
+                //Próximo nextLine serve pra limpar o \n inserido com o número no nextBigInteger anterior
+                scanner.nextLine();
             } catch (InputMismatchException | NumberFormatException e) {
                 LOGGER.severe(StringsConstants.ERR_NON_INT.toString());
-                this.id = -1;
+                this.id = BigInteger.valueOf(-1);
             }
         }
     }
-
-//    public void readMessage(Message message) {
-//        System.out.println(message.getMessage());
-//        this.wait = false;
-//    }
 }

@@ -8,8 +8,6 @@ public interface MessageRepository {
 
     Message delete(Message message);
 
-    boolean existId(long id);
-
     Message read(Message message);
 
     Message update(Message message);
