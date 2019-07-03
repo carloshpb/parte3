@@ -25,13 +25,25 @@ public class MessageRepositoryMemory implements MessageRepository {
         counterCreator = new AtomicLong(0);
     }
 
-    public static BigInteger getKey(Map<BigInteger, String> map, String value) {
-        for (BigInteger key : map.keySet()) {
+//    private final Logger LOGGER = Logger.getLogger(MessageRepositoryMemory.class.getName());
+//
+//    private volatile AtomicLong counterCreator = new AtomicLong(0);
+//
+//    public long getLastId() {
+//        return counterCreator.get();
+//    }
+//
+//    public synchronized void resetAtomicLongIdCreator() {
+//        counterCreator = new AtomicLong(0);
+//    }
+
+    public String getKey(Map<String, String> map, String value) {
+        for (String key : map.keySet()) {
             if (value.equals(map.get(key))) {
                 return key;
             }
         }
-        return BigInteger.valueOf(-1);
+        return BigInteger.valueOf(-1).toString();
     }
 
     @Override
@@ -42,8 +54,8 @@ public class MessageRepositoryMemory implements MessageRepository {
         Message answer = null;
 
         if (MemoryDB.getDatabase().containsValue(message.getMessage())) {
-            long id = getKey(MemoryDB.getDatabase(), message.getMessage()).longValue();
-            answer = new Message(1, id, StringsConstants.ERR_EXISTENT_MESSAGE.toString());
+//            long id = getKey(MemoryDB.getDatabase(), message.getMessage()).longValue();
+            answer = new Message(1, -1, StringsConstants.ERR_EXISTENT_MESSAGE.toString());
         } else {
 
             long newId = counterCreator.incrementAndGet();
@@ -52,7 +64,7 @@ public class MessageRepositoryMemory implements MessageRepository {
                 newId = counterCreator.incrementAndGet();
             }
 
-            MemoryDB.getDatabase().put(BigInteger.valueOf(newId), message.getMessage());
+            MemoryDB.getDatabase().put("generico", message.getMessage());
             answer = new Message(1, newId, StringsConstants.MESSAGE_CREATION_SUCCESS_ID.toString() + newId + " -- " + message.getMessage());
         }
 
@@ -63,7 +75,7 @@ public class MessageRepositoryMemory implements MessageRepository {
     @Override
     public Message read(Message message) {
 
-        String messageString = MemoryDB.getDatabase().get(BigInteger.valueOf(message.getId()));
+        String messageString = (String) MemoryDB.getDatabase().get(message.getId());
 
         Message answer = null;
 
@@ -89,12 +101,12 @@ public class MessageRepositoryMemory implements MessageRepository {
 
         } else if (MemoryDB.getDatabase().containsValue(message.getMessage())) {
 
-            long id = getKey(MemoryDB.getDatabase(), MemoryDB.getDatabase().get(message.getMessage())).longValue();
+            String id = getKey(MemoryDB.getDatabase(), MemoryDB.getDatabase().get(message.getMessage()));
             answer = new Message(3, StringsConstants.ERR_EXISTENT_MESSAGE.toString());
 
         } else {
 
-            MemoryDB.getDatabase().replace(BigInteger.valueOf(message.getId()), message.getMessage());
+            MemoryDB.getDatabase().replace(message.getId()+"", message.getMessage());
             answer = new Message(3, message.getId(), StringsConstants.MESSAGE_UPDATE_SUCCESS.toString());
 
         }

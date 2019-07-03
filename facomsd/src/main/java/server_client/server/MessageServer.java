@@ -25,10 +25,7 @@ import server_client.server.threads.message_queues.third_stage.DatabaseProcessin
 import server_client.server.threads.message_queues.third_stage.LogThread;
 
 import java.math.BigInteger;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
 
@@ -37,9 +34,9 @@ public class MessageServer {
 
     private final static Logger LOGGER = Logger.getLogger(MessageServer.class.getName());
 
-    private static volatile BlockingDeque<MessageData> fila1;
-    private static volatile BlockingDeque<Message> fila2;
-    private static volatile BlockingDeque<MessageData> fila3;
+    private static volatile BlockingQueue<MessageData> fila1;
+    private static volatile BlockingQueue<Message> fila2;
+    private static volatile BlockingQueue<MessageData> fila3;
 
     private static volatile ExecutorService queueThreadPool;
 
@@ -47,15 +44,15 @@ public class MessageServer {
     private static volatile DatabaseProcessingThread databaseProcessingThread;
     private static volatile LogThread logThread;
 
-    public static BlockingDeque<MessageData> getFila1() {
+    public synchronized static BlockingQueue<MessageData> getFila1() {
         return fila1;
     }
 
-    public static BlockingDeque<Message> getFila2() {
+    public synchronized static BlockingQueue<Message> getFila2() {
         return fila2;
     }
 
-    public static BlockingDeque<MessageData> getFila3() {
+    public synchronized static BlockingQueue<MessageData> getFila3() {
         return fila3;
     }
 
@@ -264,9 +261,44 @@ public class MessageServer {
 //                    .withElementType(MessageData.class)
 //                    .build();
 
-            fila1 = new LinkedBlockingDeque<>();
-            fila2 = new LinkedBlockingDeque<>();
-            fila3 = new LinkedBlockingDeque<>();
+//            fila1 = new LinkedBlockingDeque<>();
+//            fila2 = new LinkedBlockingDeque<>();
+//            fila3 = new LinkedBlockingDeque<>();
+
+//            if (secondThirdQueueThread == null) {
+//                secondThirdQueueThread = new SecondThirdQueueThread(fila1, fila2, fila3);
+//                queueThreadPool.submit(secondThirdQueueThread);
+//            }
+//
+//            if (databaseProcessingThread == null) {
+//                databaseProcessingThread = new DatabaseProcessingThread(fila3);
+//                queueThreadPool.submit(databaseProcessingThread);
+//            }
+//
+//            if (logThread == null) {
+//                logThread = new LogThread(fila2);
+//                queueThreadPool.submit(logThread);
+//            }
+
+//            MultiRaftProtocol protocolQueue = MultiRaftProtocol.builder()
+//                    .withReadConsistency(ReadConsistency.LINEARIZABLE)
+//                    .build();
+
+//            fila1 = atomix.<MessageData>queueBuilder("fila-1")
+//                    .withProtocol(protocolQueue)
+//                    .build();
+//
+//            fila2 = atomix.<Message>queueBuilder("fila-2")
+//                    .withProtocol(protocolQueue)
+//                    .build();
+//
+//            fila3 = atomix.<MessageData>queueBuilder("fila-3")
+//                    .withProtocol(protocolQueue)
+//                    .build();
+
+            fila1 = new LinkedBlockingQueue<>();
+            fila2 = new LinkedBlockingQueue<>();
+            fila3 = new LinkedBlockingQueue<>();
 
             if (secondThirdQueueThread == null) {
                 secondThirdQueueThread = new SecondThirdQueueThread(fila1, fila2, fila3);
@@ -283,19 +315,38 @@ public class MessageServer {
                 queueThreadPool.submit(logThread);
             }
 
-            MultiRaftProtocol protocol = MultiRaftProtocol.builder()
-                    .withReadConsistency(ReadConsistency.LINEARIZABLE)
-                    .build();
+//            if (secondThirdQueueThread == null) {
+//                secondThirdQueueThread = new SecondThirdQueueThread(atomix);
+//                queueThreadPool.submit(secondThirdQueueThread);
+//            }
+//
+//            if (databaseProcessingThread == null) {
+//                databaseProcessingThread = new DatabaseProcessingThread(atomix);
+//                queueThreadPool.submit(databaseProcessingThread);
+//            }
+//
+//            if (logThread == null) {
+//                logThread = new LogThread(atomix);
+//                queueThreadPool.submit(logThread);
+//            }
 
-            DistributedMap<BigInteger, String> map = atomix.<BigInteger, String>mapBuilder("my-map-db")
-                    .withProtocol(protocol)
-                    .withKeyType(BigInteger.class)
-                    .withValueType(String.class)
+//            MultiRaftProtocol protocolMap = MultiRaftProtocol.builder()
+//                    .withReadConsistency(ReadConsistency.LINEARIZABLE)
+//                    .build();
+
+//            DistributedMap<BigInteger, String> map = atomix.<BigInteger, String>mapBuilder("my-map-db")
+//                    .withProtocol(protocolMap)
+//                    .withKeyType(BigInteger.class)
+//                    .withValueType(String.class)
+//                    .withCacheEnabled()
+//                    .withCacheSize(1000)
+//                    .build();
+
+            DistributedMap<String, String> map = atomix.<String,String>mapBuilder("my-map-db")
                     .withCacheEnabled()
-                    .withCacheSize(1000)
                     .build();
 
-            MemoryDB.startDB(map);
+            MemoryDB.startDB(map, myId);
         }
 
 
@@ -316,7 +367,8 @@ public class MessageServer {
             MessageData messageData = new MessageData(receivedMessage, answerQueue);
 
             ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(new FirstQueueThread(messageData, getFila1()));
+            executor.submit(new FirstQueueThread(messageData, fila1));
+//            executor.submit(new FirstQueueThread(messageData, atomix));
 
             try {
                 receivedMessage =  answerQueue.take();

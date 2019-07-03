@@ -190,7 +190,7 @@ public class StartPrimitives {
 //
 //        System.out.println("Cluster joined");
 
-        MemoryDB.startDB(new ConcurrentHashMap<>());
+//        MemoryDB.startDB(new ConcurrentHashMap<>());
     }
 
     private static void startPrimitives() {

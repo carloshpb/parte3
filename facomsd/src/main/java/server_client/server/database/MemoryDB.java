@@ -24,7 +24,7 @@ public class MemoryDB {
     /* Nosso banco de dados (DB) em memória será esta simples lista
     (objeto ArrayList será criado para esta variável) */
     // private static volatile Map<BigInteger, byte[]> bancoEmMemoria;
-    private static volatile Map<BigInteger, String> bancoEmMemoria = null;
+    private static volatile Map<String, String> bancoEmMemoria = null;
 
     /* Construtor do MemoryDB
     * Ao criar o objeto MemoryDB na variável instance, ele já irá abrir o logFile no programa (openLog)
@@ -42,13 +42,14 @@ public class MemoryDB {
         return SINGLETON_MEMORYDB;
     }
 
-    public static synchronized Map<BigInteger, String> getDatabase() {
+    public static synchronized Map<String, String> getDatabase() {
         return bancoEmMemoria;
     }
 
-    public static synchronized void startDB(Map<BigInteger, String> bancoEmMemoria) {
+    public static synchronized void startDB(Map<String, String> bancoEmMemoria, int id) {
         MemoryDB.bancoEmMemoria = bancoEmMemoria;
-        MemoryDB.resetAtomicStartLog();
+        if (id == 0)
+            MemoryDB.resetAtomicStartLog();
     }
 
     public static synchronized void restartDB() {

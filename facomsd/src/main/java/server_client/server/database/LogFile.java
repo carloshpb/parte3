@@ -39,8 +39,8 @@ public class LogFile {
     private static final Pattern pattern2 = Pattern.compile(regex2);
 
     public synchronized static void startLog() {
-        LogFile.openLog();
-        LogFile.readLog();
+//        LogFile.openLog();
+//        LogFile.readLog();
     }
 
     /* Método usado para abrir/criar o logFile no programa */
