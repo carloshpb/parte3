@@ -5,8 +5,6 @@ import io.atomix.cluster.Node;
 import io.atomix.cluster.discovery.BootstrapDiscoveryProvider;
 import io.atomix.core.Atomix;
 import io.atomix.core.AtomixBuilder;
-import io.atomix.core.map.DistributedMap;
-import io.atomix.core.profile.ConsensusProfile;
 import io.atomix.utils.net.Address;
 import io.atomix.utils.serializer.Namespace;
 import io.atomix.utils.serializer.Namespaces;
@@ -14,11 +12,13 @@ import io.atomix.utils.serializer.Serializer;
 import server_client.client.view.TerminalView;
 import server_client.model.Message;
 
+import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
 
 public class DistributedMapClient {
 
+    // Ex :
     // args -> 0 0 127.0.0.1 5000 127.0.0.1 5001 127.0.0.1 5002
     //        (myId) (id do server) (sequência de endereços dos servidores)
     public static void main(String[] args) {
@@ -28,10 +28,14 @@ public class DistributedMapClient {
         int myId = Integer.parseInt(args[0]);
         List<Address> addresses = new LinkedList<>();
 
+        // O Serializer será necessário de se usar, caso vá usar uma classe customizada (e usaremos a Message)
+        // Será necessário registrar todas as classes das informações que serão passadas para o server pela conexão
+        // Não precisa registrar String ou primitivos (int, long, etc)
         Serializer serializer = Serializer.using(Namespace.builder()
                 .register(Namespaces.BASIC)
                 .register(MemberId.class)
                 .register(Message.class)
+                .register(BigInteger.class)
                 .build());
 
         for(int i = 2; i <args.length; i+=2)
@@ -85,10 +89,11 @@ public class DistributedMapClient {
                 case 3:
                 case 4:
                     // Serviço de comunicação do Atomix, responsavel para enviar a mensagem ao server do MemberId
-//                    atomix.getCommunicationService().send("test", message, serializer::encode, serializer::decode, MemberId.from("member-" + args[1])).thenAccept(response -> {
-//                        System.out.println(((Message)response).getMessage());
-//                    });
-                    atomix.getCommunicationService().send("test", message, serializer::encode, serializer::decode, MemberId.from("member-" + args[1])).thenAccept(System.out::println);
+                    // Recebe um CompletableFuture com a mensagem do server, a qual será pega pelo .thenAccept() e
+                    // rodará o println sobre a mensagem (ela chega como Object, tem que fazer cast nela de Message)
+                    atomix.getCommunicationService().send("mensagem-big", message, serializer::encode, serializer::decode, MemberId.from("member-" + args[1])).thenAccept(response -> {
+                        System.out.println(((Message)response).getMessage());
+                    });
                     break;
                 default:
                     // Qualquer outro valor além de 1,2,3 e 4, vai fechar a conexão com o server e fechar o cliente.

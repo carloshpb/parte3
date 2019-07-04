@@ -11,7 +11,9 @@ import java.util.Objects;
     cliente e servidor via Stream.
  */
 
-public class Message implements Serializable {
+//implements Serializable
+
+public class Message implements Serializable{
 
     private static final long serialVersionUID = 2627984335773148702L;
     private int lastOption;
